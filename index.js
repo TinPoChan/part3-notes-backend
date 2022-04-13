@@ -53,11 +53,12 @@ app.post('/api/persons', (request, response, next) => {
   Person.find({ name: body.name }).then(result => {
     if (result.length > 0) {
       return response.status(400).json({ error: 'name must be unique' })
+    } else {
+      person.save().then(savedPerson => {
+        response.json(savedPerson)
+      }).catch(error => next(error))   
     }
-    person.save().then(savedPerson => {
-      response.json(savedPerson)
-    })
-  }).catch(error => next(error))    
+  }) 
 
 })
 

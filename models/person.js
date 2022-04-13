@@ -21,7 +21,7 @@ const personSchema = new mongoose.Schema({
     number:{
         type: String,
         minlength: 8,
-        required: [true, 'User phone number required'],
+        required: true,
         validate: {
             validator: function(v) {
                 //if formed of two parts that are separated by -, the first part has two or three numbers and the second part also consists of numbers

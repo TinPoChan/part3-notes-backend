@@ -1,8 +1,8 @@
 
-POST  http://localhost:3001/api/persons/
+GET  http://localhost:3001/api/persons/
 content-type: application/json
     
     {
     "name": "abccc",
-    "number": "123124412312"
+    "number": "1231"
     }
