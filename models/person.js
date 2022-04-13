@@ -18,7 +18,18 @@ const personSchema = new mongoose.Schema({
         minlength: 3,
         required: true
     },
-    number: String
+    number:{
+        type: String,
+        minlength: 8,
+        required: true,
+        validate: {
+            validator: function(v) {
+                //if formed of two parts that are separated by -, the first part has two or three numbers and the second part also consists of numbers
+                return /^\d{2}-\d{6,}|^\d{3}-\d{5,}|^\d{8,}/.test(v)
+            },
+            message: '{VALUE} is not a valid phone number!'
+        }
+    } 
 })
 
 personSchema.set('toJSON', {

@@ -44,29 +44,20 @@ app.get('/info', (req, res) => {
 app.post('/api/persons', (request, response, next) => {
   const body = request.body
 
-  // if (!body.name || !body.number) {
-  //   return response.status(400).json({
-  //     error: 'Name or number missing'
-  //   })
-  // }
-
-  // if (persons.find(person => person.name === body.name)) {
-  //   return response.status(400).json({
-  //     error: 'Name must be unique'
-  //   })
-  // }
-
-
   const person = new Person({
     //id: generateId(),
     name: body.name,
     number: body.number
   })
 
-  person.save().then(savedPerson => {
-    response.json(savedPerson)
-  })
-    .catch(error => next(error))
+  Person.find({ name: body.name }).then(result => {
+    if (result.length > 0) {
+      return response.status(400).json({ error: 'name must be unique' })
+    }
+    person.save().then(savedPerson => {
+      response.json(savedPerson)
+    })
+  }).catch(error => next(error))    
 
 })
 
