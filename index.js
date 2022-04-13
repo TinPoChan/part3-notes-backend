@@ -1,8 +1,33 @@
+require('dotenv').config()
 const express = require('express')
 const app = express()
 var morgan = require('morgan')
 const cors = require('cors')
 app.use(express.static('build'))
+const Person = require ('./models/person')
+const mongoose = require('mongoose')
+
+// const password = process.argv[2]
+
+// const url =
+//   `mongodb+srv://ericchantinpo:${password}@fullstackopen.2v8xe.mongodb.net/personApp?retryWrites=true&w=majority`
+
+// mongoose.connect(url)
+
+// const personSchema = new mongoose.Schema({
+//   name: String,
+//   number: String
+// })
+
+// personSchema.set('toJSON', {
+//   transform: (document, returnedObject) => {
+//     returnedObject.id = returnedObject._id.toString()
+//     delete returnedObject._id
+//     delete returnedObject.__v
+//   }
+// })
+
+// const Person = mongoose.model('Person', personSchema)
 
 app.use(cors())
 
@@ -74,19 +99,25 @@ app.post('/api/persons', (request, response) => {
     })
   }
 
-  const person = {
+  const person = new Person({
     id: generateId(),
     name: body.name,
     number: body.number
-  }
+  })
 
-  persons = persons.concat(person)
+  person.save().then(savedPerson => {
+    response.json(savedPerson)
+  })
 
-  response.json(person)
+  // persons = persons.concat(person)
+
+  // response.json(person)
 })
 
 app.get('/api/persons', (req, res) => {
-  res.json(persons)
+  Person.find({}).then(result => {
+    res.json(result)
+  })
 })
 
 app.delete('/api/persons/:id', (request, response) => {
@@ -97,14 +128,21 @@ app.delete('/api/persons/:id', (request, response) => {
 })
 
 app.get('/api/persons/:id', (request, response) => {
-  const id = Number(request.params.id)
-  const person = persons.find(person => person.id === id)
+  // const id = Number(request.params.id)
+  // const person = persons.find(person => person.id === id)
 
-  if (person) {
-    response.json(person)
-  } else {
-    response.status(404).end()
-  }
+  // if (person) {
+  //   response.json(person)
+  // } else {
+  //   response.status(404).end()
+  // }
+  Person.findById(request.params.id).then(result => {
+    if (result) {
+      response.json(result)
+    } else {
+      response.status(404).end()
+    }
+  })
 })
 
 const PORT = process.env.PORT || 3001
