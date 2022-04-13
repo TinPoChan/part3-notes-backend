@@ -81,8 +81,12 @@ const generateId = () => {
 }
 
 app.get('/info', (req, res) => {
-  res.send(`<p>Phonebook has info for ${persons.length} people</p>
-  <p>${new Date()}</p>`)
+  Person.find({}).then(result => {
+    const date = new Date()
+    const info = `<p>Phonebook has info for ${result.length} people</p>
+    <p>${date}</p>`
+    res.send(info)
+  })
 })
 
 
