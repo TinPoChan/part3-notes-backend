@@ -5,29 +5,6 @@ var morgan = require('morgan')
 const cors = require('cors')
 app.use(express.static('build'))
 const Person = require('./models/person')
-const mongoose = require('mongoose')
-
-// const password = process.argv[2]
-
-// const url =
-//   `mongodb+srv://ericchantinpo:${password}@fullstackopen.2v8xe.mongodb.net/personApp?retryWrites=true&w=majority`
-
-// mongoose.connect(url)
-
-// const personSchema = new mongoose.Schema({
-//   name: String,
-//   number: String
-// })
-
-// personSchema.set('toJSON', {
-//   transform: (document, returnedObject) => {
-//     returnedObject.id = returnedObject._id.toString()
-//     delete returnedObject._id
-//     delete returnedObject.__v
-//   }
-// })
-
-// const Person = mongoose.model('Person', personSchema)
 
 app.use(cors())
 
@@ -39,32 +16,6 @@ app.use(morgan(':method :url :status :req[body] - :response-time ms :body', {
     return res.statusCode >= 400
   }
 }))
-
-
-
-let persons =
-  [
-    {
-      "id": 1,
-      "name": "Arto Hellas",
-      "number": "040-123456"
-    },
-    {
-      "id": 2,
-      "name": "Ada Lovelace",
-      "number": "39-44-5323523"
-    },
-    {
-      "id": 3,
-      "name": "Dan Abramov",
-      "number": "12-43-234345"
-    },
-    {
-      "id": 4,
-      "name": "Mary Poppendieck",
-      "number": "39-23-6423122"
-    }
-  ]
 
 app.use(express.json())
 
@@ -90,23 +41,24 @@ app.get('/info', (req, res) => {
 })
 
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
   const body = request.body
 
-  if (!body.name || !body.number) {
-    return response.status(400).json({
-      error: 'Name or number missing'
-    })
-  }
+  // if (!body.name || !body.number) {
+  //   return response.status(400).json({
+  //     error: 'Name or number missing'
+  //   })
+  // }
 
-  if (persons.find(person => person.name === body.name)) {
-    return response.status(400).json({
-      error: 'Name must be unique'
-    })
-  }
+  // if (persons.find(person => person.name === body.name)) {
+  //   return response.status(400).json({
+  //     error: 'Name must be unique'
+  //   })
+  // }
+
 
   const person = new Person({
-    id: generateId(),
+    //id: generateId(),
     name: body.name,
     number: body.number
   })
@@ -114,10 +66,8 @@ app.post('/api/persons', (request, response) => {
   person.save().then(savedPerson => {
     response.json(savedPerson)
   })
+    .catch(error => next(error))
 
-  // persons = persons.concat(person)
-
-  // response.json(person)
 })
 
 app.get('/api/persons', (req, res) => {
@@ -133,14 +83,6 @@ app.delete('/api/persons/:id', (request, response) => {
 })
 
 app.get('/api/persons/:id', (request, response, next) => {
-  // const id = Number(request.params.id)
-  // const person = persons.find(person => person.id === id)
-
-  // if (person) {
-  //   response.json(person)
-  // } else {
-  //   response.status(404).end()
-  // }
   Person.findById(request.params.id).then(result => {
     if (result) {
       response.json(result)
@@ -154,12 +96,9 @@ app.get('/api/persons/:id', (request, response, next) => {
 app.put('/api/persons/:id', (request, response, next) => {
   const body = request.body
 
-  const person = {
-    name: body.name,
-    number: body.number,
-  }
+  const { name, number } = request.body
 
-  Person.findByIdAndUpdate(request.params.id, person, { new: true }).then(result => {
+  Person.findByIdAndUpdate(request.params.id, { name, number }, { new: true, runValidators: true, context: 'query' }).then(result => {
     response.json(result)
   })
     .catch(error => next(error))
@@ -170,7 +109,9 @@ const errorHandler = (error, request, response, next) => {
 
   if (error.name === 'CastError') {
     return response.status(400).send({ error: 'malformatted id' })
-  } 
+  } else if (error.name === 'ValidationError') {
+    return response.status(400).json({ error: error.message })
+  }
 
   next(error)
 }
