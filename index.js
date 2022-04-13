@@ -4,7 +4,7 @@ const app = express()
 var morgan = require('morgan')
 const cors = require('cors')
 app.use(express.static('build'))
-const Person = require ('./models/person')
+const Person = require('./models/person')
 const mongoose = require('mongoose')
 
 // const password = process.argv[2]
@@ -40,29 +40,31 @@ app.use(morgan(':method :url :status :req[body] - :response-time ms :body', {
   }
 }))
 
-let persons = 
+
+
+let persons =
   [
-    { 
+    {
       "id": 1,
-      "name": "Arto Hellas", 
+      "name": "Arto Hellas",
       "number": "040-123456"
     },
-    { 
+    {
       "id": 2,
-      "name": "Ada Lovelace", 
+      "name": "Ada Lovelace",
       "number": "39-44-5323523"
     },
-    { 
+    {
       "id": 3,
-      "name": "Dan Abramov", 
+      "name": "Dan Abramov",
       "number": "12-43-234345"
     },
-    { 
+    {
       "id": 4,
-      "name": "Mary Poppendieck", 
+      "name": "Mary Poppendieck",
       "number": "39-23-6423122"
     }
-]
+  ]
 
 app.use(express.json())
 
@@ -72,13 +74,13 @@ app.get('/', (req, res) => {
 
 const generateId = () => {
   const randomID = Math.floor(Math.random() * 1000)
-  if(persons.find(person => person.id === randomID)) {
+  if (persons.find(person => person.id === randomID)) {
     return generateId()
   }
   return randomID
 }
 
-app.get('/info' , (req, res) => {
+app.get('/info', (req, res) => {
   res.send(`<p>Phonebook has info for ${persons.length} people</p>
   <p>${new Date()}</p>`)
 })
@@ -88,8 +90,8 @@ app.post('/api/persons', (request, response) => {
   const body = request.body
 
   if (!body.name || !body.number) {
-    return response.status(400).json({ 
-      error: 'Name or number missing' 
+    return response.status(400).json({
+      error: 'Name or number missing'
     })
   }
 
@@ -126,7 +128,7 @@ app.delete('/api/persons/:id', (request, response) => {
   })
 })
 
-app.get('/api/persons/:id', (request, response) => {
+app.get('/api/persons/:id', (request, response, next) => {
   // const id = Number(request.params.id)
   // const person = persons.find(person => person.id === id)
 
@@ -142,7 +144,35 @@ app.get('/api/persons/:id', (request, response) => {
       response.status(404).end()
     }
   })
+    .catch(error => next(error))
 })
+
+app.put('/api/persons/:id', (request, response, next) => {
+  const body = request.body
+
+  const person = {
+    name: body.name,
+    number: body.number,
+  }
+
+  Person.findByIdAndUpdate(request.params.id, person, { new: true }).then(result => {
+    response.json(result)
+  })
+    .catch(error => next(error))
+})
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  } 
+
+  next(error)
+}
+
+// this has to be the last loaded middleware.
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
