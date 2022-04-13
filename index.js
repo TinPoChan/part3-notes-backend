@@ -8,7 +8,7 @@ const Person = require('./models/person')
 
 app.use(cors())
 
-morgan.token('body', function (req, res) {
+morgan.token('body', function (req) {
   return JSON.stringify(req.body)
 })
 app.use(morgan(':method :url :status :req[body] - :response-time ms :body', {
@@ -23,13 +23,13 @@ app.get('/', (req, res) => {
   res.send('<h1>Hello World!</h1>')
 })
 
-const generateId = () => {
-  const randomID = Math.floor(Math.random() * 1000)
-  if (persons.find(person => person.id === randomID)) {
-    return generateId()
-  }
-  return randomID
-}
+// const generateId = () => {
+//   const randomID = Math.floor(Math.random() * 1000)
+//   if (persons.find(person => person.id === randomID)) {
+//     return generateId()
+//   }
+//   return randomID
+// }
 
 app.get('/info', (req, res) => {
   Person.find({}).then(result => {
@@ -56,9 +56,9 @@ app.post('/api/persons', (request, response, next) => {
     } else {
       person.save().then(savedPerson => {
         response.json(savedPerson)
-      }).catch(error => next(error))   
+      }).catch(error => next(error))
     }
-  }) 
+  })
 
 })
 
@@ -69,7 +69,7 @@ app.get('/api/persons', (req, res) => {
 })
 
 app.delete('/api/persons/:id', (request, response) => {
-  Person.findByIdAndRemove(request.params.id).then(result => {
+  Person.findByIdAndRemove(request.params.id).then(() => {
     response.status(204).end()
   })
 })
@@ -86,7 +86,6 @@ app.get('/api/persons/:id', (request, response, next) => {
 })
 
 app.put('/api/persons/:id', (request, response, next) => {
-  const body = request.body
 
   const { name, number } = request.body
 
@@ -111,6 +110,7 @@ const errorHandler = (error, request, response, next) => {
 // this has to be the last loaded middleware.
 app.use(errorHandler)
 
+// eslint-disable-next-line no-undef
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
